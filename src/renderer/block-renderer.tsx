@@ -54,6 +54,16 @@ interface BlockRendererProps {
   analyticsWrapper?: AnalyticsWrapperComponent;
 }
 
+function resolveBlockConfig(block: BlockInstance): Record<string, unknown> {
+  if ("config" in block && block.config !== undefined) {
+    return block.config;
+  }
+  if ("data" in block && block.data !== undefined) {
+    return block.data;
+  }
+  return {};
+}
+
 // NO "use client" directive - this is a server component
 export default function BlockRenderer({
   block,
@@ -64,15 +74,11 @@ export default function BlockRenderer({
   const AnalyticsWrapper = analyticsWrapper ?? globalAnalyticsWrapper;
   const { type, id } = block;
 
+  // eslint-disable-next-line react-hooks/static-components -- dynamic registry lookup by design
   const BlockComponent = blockRegistry.get(type);
 
   if (!BlockComponent) {
-    const config =
-      "config" in block && block.config !== undefined
-        ? block.config
-        : "data" in block && block.data !== undefined
-          ? block.data
-          : {};
+    const config = resolveBlockConfig(block);
 
     return (
       <ComponentNotFound
@@ -121,12 +127,7 @@ export default function BlockRenderer({
   }
 
   // Regular blocks get config (or data if config is not present)
-  const config =
-    "config" in block && block.config !== undefined
-      ? block.config
-      : "data" in block && block.data !== undefined
-        ? block.data
-        : {};
+  const config = resolveBlockConfig(block);
 
   // Blocks that can contain nested blocks need the blockRegistry and siteId
   if (
