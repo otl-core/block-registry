@@ -50,5 +50,22 @@ export default function ComponentNotFound({
     }
   }
 
-  return <div style={{ minHeight: "1px" }} aria-hidden="true" />;
+  return (
+    <div
+      style={{
+        minHeight: "40px",
+        border: "1px dashed #e5e7eb",
+        borderRadius: "4px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#9ca3af",
+        fontSize: "12px",
+        fontFamily: "monospace",
+      }}
+      aria-hidden="true"
+    >
+      {type}
+    </div>
+  );
 }
