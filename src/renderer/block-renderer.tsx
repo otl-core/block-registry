@@ -27,7 +27,13 @@ type AnalyticsWrapperComponent = React.ComponentType<{
   children: React.ReactNode;
 }>;
 
+type BlockStyleWrapperComponent = React.ComponentType<{
+  config: Record<string, unknown>;
+  children: React.ReactNode;
+}>;
+
 let globalAnalyticsWrapper: AnalyticsWrapperComponent | null = null;
+let globalBlockStyleWrapper: BlockStyleWrapperComponent | null = null;
 
 /**
  * Register a global analytics wrapper component that will be applied to
@@ -37,6 +43,17 @@ export function registerAnalyticsWrapper(
   wrapper: AnalyticsWrapperComponent,
 ): void {
   globalAnalyticsWrapper = wrapper;
+}
+
+/**
+ * Register a global block style wrapper component that applies common
+ * styling (padding, margin, color, borderRadius, etc.) to all blocks.
+ * Call once during app initialization.
+ */
+export function registerBlockStyleWrapper(
+  wrapper: BlockStyleWrapperComponent,
+): void {
+  globalBlockStyleWrapper = wrapper;
 }
 
 interface BlockInstance {
@@ -95,6 +112,8 @@ export default function BlockRenderer({
     | BlockAnalyticsConfig
     | undefined;
 
+  const StyleWrapper = globalBlockStyleWrapper;
+
   // Helper to wrap rendered block with analytics if wrapper is provided
   const wrapWithAnalytics = (element: React.ReactElement) => {
     if (AnalyticsWrapper) {
@@ -129,6 +148,14 @@ export default function BlockRenderer({
   // Regular blocks get config (or data if config is not present)
   const config = resolveBlockConfig(block);
 
+  // Helper to wrap rendered block with style wrapper if registered
+  const wrapWithStyle = (element: React.ReactElement) => {
+    if (StyleWrapper) {
+      return <StyleWrapper config={config}>{element}</StyleWrapper>;
+    }
+    return element;
+  };
+
   // Blocks that can contain nested blocks need the blockRegistry and siteId
   if (
     type === "alert" ||
@@ -140,13 +167,17 @@ export default function BlockRenderer({
     type === "entry-content"
   ) {
     return wrapWithAnalytics(
-      <BlockComponent
-        config={config}
-        siteId={siteId}
-        blockRegistry={blockRegistry}
-      />,
+      wrapWithStyle(
+        <BlockComponent
+          config={config}
+          siteId={siteId}
+          blockRegistry={blockRegistry}
+        />,
+      ),
     );
   }
 
-  return wrapWithAnalytics(<BlockComponent config={config} siteId={siteId} />);
+  return wrapWithAnalytics(
+    wrapWithStyle(<BlockComponent config={config} siteId={siteId} />),
+  );
 }

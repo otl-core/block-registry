@@ -12,5 +12,6 @@ export type {
 export {
   default as BlockRenderer,
   registerAnalyticsWrapper,
+  registerBlockStyleWrapper,
 } from "./renderer/block-renderer";
 export { default as ComponentNotFound } from "./renderer/component-not-found";
